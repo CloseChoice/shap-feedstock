@@ -1,13 +1,18 @@
 {% set name = "shap" %}
-{% set version = "0.46.0" %}
+{% set version = "0.47.0" %}
+# {% set version = "0.46.1" %}
 
 package:
   name: {{ name|lower }}
   version: {{ version }}
 
 source:
-  url: https://pypi.io/packages/source/{{ name[0] }}/{{ name }}/{{ name }}-{{ version }}.tar.gz
-  sha256: bdaa5b098be5a958348015e940f6fd264339b5db1e651f9898a3117be95b05a0
+  git_url: https://github.com/shap/shap.git
+  git_rev: CI-fix-feedstock-build
+  # url: https://pypi.io/packages/source/{{ name[0] }}/{{ name }}/{{ name }}-{{ version }}.tar.gz
+  # sha256: bdaa5b098be5a958348015e940f6fd264339b5db1e651f9898a3117be95b05a0
+  # url: https://github.com/shap/shap/archive/refs/heads/CI-fix-feedstock-build.zip
+  # sha256: f0cf78de5282b9e08db49c52727ac623171e786d266546a52f8f161635386409
   patches:
     - 0001-Build-for-all-CUDA-11-arches.patch  # [cuda_compiler_version == "11.8"]
     - 0001-Build-for-all-CUDA-12-arches.patch  # [(cuda_compiler_version or "").startswith("12")]
@@ -33,12 +38,14 @@ requirements:
     - python                                 # [build_platform != target_platform]
     - cross-python_{{ target_platform }}     # [build_platform != target_platform]
     - numpy                                  # [build_platform != target_platform]
+    # - nvidia-nccl-cu12
   host:
     - python
     - pip
     - setuptools >=61.0
     - setuptools-scm >=8.0
     - packaging >=20.9
+    # - nvidia-nccl-cu12
     - numpy
     - cuda-cudart-dev   # [(cuda_compiler_version or "").startswith("12")]
   run:
@@ -52,6 +59,7 @@ requirements:
     - slicer ==0.0.8
     - numba
     - cloudpickle
+    # - nvidia-nccl-cu12
     - __cuda  # [cuda_compiler_version != "None"]
 
 test:
@@ -61,12 +69,13 @@ test:
     - pytest-mpl
     - matplotlib-base
     - ipython
-    - xgboost
+    # - nvidia-nccl-cu12
+    # - xgboost 
     - tensorflow  # [(osx or linux64) and py<312]
     # Not available on the platforms
     - pytorch  # [not (win or ppc64le)]
     # transformers tests require pytorch
-    - transformers  # [not (win or ppc64le)]
+    # - transformers  # [not (win or ppc64le)]
     - catboost  # [not ppc64le]
     - ngboost
     - pyod >=1

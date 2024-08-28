@@ -41,6 +41,10 @@ fi
 
 ARTIFACTS="$FEEDSTOCK_ROOT/build_artifacts"
 
+export CONFIG=linux_64_c_compiler_version12c_stdlib_version2.12cuda_compilerNonecuda_compiler_versionNonecxx_compiler_version12numpy1.23python3.11.____cpython
+# quay.io/condaforge/linux-anvil-cuda:11.8
+export DOCKER_IMAGE="quay.io/condaforge/linux-anvil-cuda:11.8"
+# quay.io/condaforge/linux-anvil-cuda:11.8
 if [ -z "$CONFIG" ]; then
     set +x
     FILES=`ls .ci_support/linux_*`
@@ -49,6 +53,7 @@ if [ -z "$CONFIG" ]; then
         CONFIGS="${CONFIGS}'${file:12:-5}' or ";
     done
     echo "Need to set CONFIG env variable. Value can be one of ${CONFIGS:0:-4}"
+    exit 1
 fi
 
 if [ -z "${DOCKER_IMAGE}" ]; then
@@ -57,11 +62,11 @@ if [ -z "${DOCKER_IMAGE}" ]; then
         echo "WARNING: DOCKER_IMAGE variable not set and shyaml not installed. Trying to parse with coreutils"
         DOCKER_IMAGE=$(cat .ci_support/${CONFIG}.yaml | grep '^docker_image:$' -A 1 | tail -n 1 | cut -b 3-)
         if [ "${DOCKER_IMAGE}" = "" ]; then
-            echo "No docker_image entry found in ${CONFIG}. Falling back to quay.io/condaforge/linux-anvil-comp7"
-            DOCKER_IMAGE="quay.io/condaforge/linux-anvil-comp7"
+            echo "No docker_image entry found in ${CONFIG}. Falling back to quay.io/condaforge/linux-anvil-cuda:11.8"
+            DOCKER_IMAGE="quay.io/condaforge/linux-anvil-cuda:11.8"
         fi
     else
-        DOCKER_IMAGE="$(cat "${FEEDSTOCK_ROOT}/.ci_support/${CONFIG}.yaml" | shyaml get-value docker_image.0 quay.io/condaforge/linux-anvil-comp7 )"
+        DOCKER_IMAGE="$(cat "${FEEDSTOCK_ROOT}/.ci_support/${CONFIG}.yaml" | shyaml get-value docker_image.0 quay.io/condaforge/linux-anvil-cuda:11.8)"
     fi
 fi
 
@@ -89,14 +94,15 @@ echo "recipe_root: ${RECIPE_ROOT}"
 echo "feedstock_root: ${FEEDSTOCK_ROOT}"
 echo "docker_image: ${DOCKER_IMAGE}"
 echo "provider id: ${PROVIDER_DIR}"
-echo "config: ${CONFIG}"
 echo "whole command to execute: docker run ${DOCKER_RUN_ARGS} -v ${RECIPE_ROOT}:/home/conda/recipe_root:rw,z,delegated -v ${FEEDSTOCK_ROOT}:/home/conda/feedstock_root:rw,z,delegated -e CONFIG -e HOST_USER_ID -e UPLOAD_PACKAGES -e IS_PR_BUILD -e GIT_BRANCH -e UPLOAD_ON_BRANCH -e CI -e FEEDSTOCK_NAME -e CPU_COUNT -e BUILD_WITH_CONDA_DEBUG -e BUILD_OUTPUT_ID -e flow_run_id -e remote_url -e sha -e BINSTAR_TOKEN -e FEEDSTOCK_TOKEN -e STAGING_BINSTAR_TOKEN ${DOCKER_IMAGE} bash /home/conda/feedstock_root/${PROVIDER_DIR}/build_steps.sh"
 
-( endgroup "Start Docker" ) 2> /dev/null
+# docker run -it  -v /home/tobias/programming/github/shap-feedstock/recipe:/home/conda/recipe_root:rw,z,delegated -v /home/tobias/programming/github/shap-feedstock:/home/conda/feedstock_root:rw,z,delegated -e CONFIG -e HOST_USER_ID -e UPLOAD_PACKAGES -e IS_PR_BUILD -e GIT_BRANCH -e UPLOAD_ON_BRANCH -e CI -e FEEDSTOCK_NAME -e CPU_COUNT -e BUILD_WITH_CONDA_DEBUG -e BUILD_OUTPUT_ID -e flow_run_id -e remote_url -e sha -e BINSTAR_TOKEN -e FEEDSTOCK_TOKEN -e STAGING_BINSTAR_TOKEN quay.io/condaforge/linux-anvil-cuda:11.8 bash /home/conda/feedstock_root/.scripts/build_steps.sh
+# ( endgroup "Start Docker" ) 2> /dev/null
 
-docker run ${DOCKER_RUN_ARGS} \
+docker run -it \
            -v "${RECIPE_ROOT}":/home/conda/recipe_root:rw,z,delegated \
            -v "${FEEDSTOCK_ROOT}":/home/conda/feedstock_root:rw,z,delegated \
+           -v "./build_artifacts":/opt/conda/conda-bld \
            -e CONFIG \
            -e HOST_USER_ID \
            -e UPLOAD_PACKAGES \
@@ -115,11 +121,7 @@ docker run ${DOCKER_RUN_ARGS} \
            -e FEEDSTOCK_TOKEN \
            -e STAGING_BINSTAR_TOKEN \
            "${DOCKER_IMAGE}" \
-           bash \
-           "/home/conda/feedstock_root/${PROVIDER_DIR}/build_steps.sh"
+           bash
 
-# verify that the end of the script was reached
-test -f "$DONE_CANARY"
-
-# This closes the last group opened in `build_steps.sh`
-( endgroup "Final checks" ) 2> /dev/null
+# /home/conda/feedstock_root/.scripts/build_steps.sh
+           

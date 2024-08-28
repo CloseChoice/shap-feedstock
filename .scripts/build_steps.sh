@@ -10,6 +10,8 @@
 set -xeuo pipefail
 export FEEDSTOCK_ROOT="${FEEDSTOCK_ROOT:-/home/conda/feedstock_root}"
 source ${FEEDSTOCK_ROOT}/.scripts/logging_utils.sh
+echo "This is FEEDSTOCK_ROOT ${FEEDSTOCK_ROOT}"
+echo "This is ci_support ${FEEDSTOCK_ROOT}/.ci_support"
 
 
 ( endgroup "Start Docker" ) 2> /dev/null
@@ -58,12 +60,15 @@ if [[ "${HOST_PLATFORM}" != "${BUILD_PLATFORM}" ]] && [[ "${HOST_PLATFORM}" != l
     EXTRA_CB_OPTIONS="${EXTRA_CB_OPTIONS:-} --no-test"
 fi
 
+echo "WE ARE AT LINE 63"
 
 ( endgroup "Configuring conda" ) 2> /dev/null
 
 if [[ -f "${FEEDSTOCK_ROOT}/LICENSE.txt" ]]; then
   cp "${FEEDSTOCK_ROOT}/LICENSE.txt" "${RECIPE_ROOT}/recipe-scripts-license.txt"
 fi
+
+echo "WE ARE AT LINE 70"
 
 if [[ "${BUILD_WITH_CONDA_DEBUG:-0}" == 1 ]]; then
     if [[ "x${BUILD_OUTPUT_ID:-}" != "x" ]]; then
@@ -76,28 +81,37 @@ if [[ "${BUILD_WITH_CONDA_DEBUG:-0}" == 1 ]]; then
     # Drop into an interactive shell
     /bin/bash
 else
+    echo "WE ARE AT LINE 83"
+    echo "run libmamba commad: libmamba conda-build ${RECIPE_ROOT} -m ${CI_SUPPORT}/${CONFIG}.yaml --suppress-variables ${EXTRA_CB_OPTIONS:-} --clobber-file ${CI_SUPPORT}/clobber_${CONFIG}.yaml --extra-meta flow_run_id=${flow_run_id:-} remote_url=${remote_url:-} sha=${sha:-}"
+    echo "clean conda"
     CONDA_SOLVER=libmamba conda-build "${RECIPE_ROOT}" -m "${CI_SUPPORT}/${CONFIG}.yaml" \
         --suppress-variables ${EXTRA_CB_OPTIONS:-} \
         --clobber-file "${CI_SUPPORT}/clobber_${CONFIG}.yaml" \
         --extra-meta flow_run_id="${flow_run_id:-}" remote_url="${remote_url:-}" sha="${sha:-}"
 
+    echo "WE ARE AT LINE 89"
     ( startgroup "Inspecting artifacts" ) 2> /dev/null
+    echo "WE ARE AT LINE 91"
 
     # inspect_artifacts was only added in conda-forge-ci-setup 4.6.0
     command -v inspect_artifacts >/dev/null 2>&1 && inspect_artifacts || echo "inspect_artifacts needs conda-forge-ci-setup >=4.6.0"
+    echo "We are at line 95"
 
     ( endgroup "Inspecting artifacts" ) 2> /dev/null
     ( startgroup "Validating outputs" ) 2> /dev/null
 
+    echo "We are at line 100"
     validate_recipe_outputs "${FEEDSTOCK_NAME}"
 
     ( endgroup "Validating outputs" ) 2> /dev/null
 
     ( startgroup "Uploading packages" ) 2> /dev/null
 
+    echo "We are at line 107"
     if [[ "${UPLOAD_PACKAGES}" != "False" ]] && [[ "${IS_PR_BUILD}" == "False" ]]; then
         upload_package --validate --feedstock-name="${FEEDSTOCK_NAME}"  "${FEEDSTOCK_ROOT}" "${RECIPE_ROOT}" "${CONFIG_FILE}"
     fi
+    echo "We are at line 111"
 
     ( endgroup "Uploading packages" ) 2> /dev/null
 fi
