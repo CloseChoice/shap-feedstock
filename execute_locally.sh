@@ -1,0 +1,11 @@
+see ./scripts/debug_docker_locally.sh
+
+
+CONDA_SOLVER=libmamba conda-build /home/conda/recipe_root -m /home/conda/feedstock_root/.ci_support/linux_64_c_compiler_version12c_stdlib_version2.12cuda_compilerNonecuda_compiler_versionNonecxx_compiler_version12numpy1.23python3.11.____cpython.yaml
+
+CONDA_SOLVER=libmamba conda-build /home/conda/recipe_root -m /home/conda/feedstock_root/.ci_support/linux_64_c_compiler_version12c_stdlib_version2.12cuda_compilerNonecuda_compiler_versionNonecxx_compiler_version12numpy1.23python3.11.____cpython.yaml --suppress-variables  --clobber-file /home/conda/feedstock_root/.ci_support/clobber_linux_64_c_compiler_version12c_stdlib_version2.12cuda_compilerNonecuda_compiler_versionNonecxx_compiler_version12numpy1.23python3.11.____cpython.yaml --extra-meta flow_run_id="111" remote_url="" sha=""
+
+linux_64_c_compiler_version11c_stdlib_version2.17cuda_compilernvcccuda_compiler_version11.8cxx_compiler_version11numpy1.23python3.11.____cpython
+
+linux_64_c_compiler_version12c_stdlib_version2.12cuda_compilerNonecuda_compiler_versionNonecxx_compiler_version12numpy1.23python3.11.____cpython
+try with version without cuda!!!
